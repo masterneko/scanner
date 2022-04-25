@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 class lexer
 {
 private:
@@ -185,6 +187,7 @@ public:
     void set_source(const string_type& s)
     {
         _source = s;
+        _index = 0;
     }
 
     iterator current()
@@ -232,6 +235,27 @@ public:
         }
 
         return *this;
+    }
+
+    string_type split(const string_type& match)
+    {
+        string_type substr;
+        
+        while(current())
+        {
+            if(!match.empty() && current().is(match))
+            {
+                advance();
+                
+                break;
+            }
+            
+            substr.append(1, current());
+            
+            advance();
+        }
+        
+        return substr;
     }
 
     iterator begin()
