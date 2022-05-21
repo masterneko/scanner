@@ -15,6 +15,7 @@ public:
     class iterator
     {
     private:
+        static string_type _empty_str;
         const string_type& _s;
         int _i = 0;
 
@@ -27,7 +28,7 @@ public:
 
         iterator()
         :
-        _s(nullptr),
+        _s(_empty_str),
         _i(-1)
         {
         }
@@ -237,16 +238,14 @@ public:
         return *this;
     }
 
-    string_type split(const string_type& match)
+    string_type split(const string_type& match, bool exclusive = false)
     {
         string_type substr;
         
         while(current())
         {
-            if(!match.empty() && current().is(match))
-            {
-                advance();
-                
+            if(!match.empty() && (exclusive ? current().is_not(match) : current().is(match)))
+            {                
                 break;
             }
             

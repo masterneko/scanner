@@ -25,8 +25,7 @@ int main()
             std::cout << component << "\n";
         }
 
-        // advancing is not required here because split does it for us
-        // lex.advance();
+        lex.advance();
     }
 
     // example two
@@ -48,6 +47,8 @@ int main()
         }
 
         extension = lex.split(".");
+
+        lex.advance();
     }
 
     std::cout << "\n" << s << " ->\nfilename: " << filename << "\nextension: " << extension << std::endl;
