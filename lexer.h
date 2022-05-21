@@ -69,7 +69,7 @@ public:
 
         int column_number()
         {
-            int column = 0;
+            int column = 1;
 
             for(int i = 0; i < _i; i++)
             {
