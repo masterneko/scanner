@@ -11,7 +11,7 @@ int main()
     // path -> [ a, b, c... ]
 
     std::string s = "/a/path/which/leads/to/a/file";
-    lexer lex(s);
+    lexer_t lex(s);
 
     std::cout << s << " ->\n";
 

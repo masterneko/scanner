@@ -2,7 +2,7 @@
 
 #include <string>
 
-class lexer
+class lexer_t
 {
 private:
     using char_type = char;
@@ -172,16 +172,16 @@ public:
             return get(_i);
         }
 
-        friend lexer;
+        friend lexer_t;
     };
 
-    lexer(const string_type& s)
+    lexer_t(const string_type& s)
     :
     _source(s)
     {
     }
 
-    lexer()
+    lexer_t()
     {
     }
 
@@ -218,7 +218,7 @@ public:
         return iterator(_source, _index);
     }
 
-    lexer& skip(char_type c)
+    lexer_t& skip(char_type c)
     {
         while(current() == c)
         {
@@ -228,7 +228,7 @@ public:
         return *this;
     }
 
-    lexer& skip(const string_type& s)
+    lexer_t& skip(const string_type& s)
     {
         while(current() == s)
         {
