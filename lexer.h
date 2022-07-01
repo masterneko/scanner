@@ -4,10 +4,11 @@
 
 class lexer_t
 {
-private:
+public:
     using char_type = char;
     using string_type = std::string;
 
+private:
     string_type _source;
     int _index = 0;
 
