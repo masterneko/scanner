@@ -47,7 +47,7 @@ public:
             return get(_i);
         }
 
-        int line_number()
+        int line_number() const
         {
             int line = 1;
 
@@ -68,7 +68,7 @@ public:
             return line;
         }
 
-        int column_number()
+        int column_number() const
         {
             int column = 1;
 
