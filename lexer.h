@@ -78,7 +78,7 @@ public:
 
                 if(c == '\n')
                 {
-                    column = 0;
+                    column = 1;
                 }
                 else if(c == 0)
                 {
