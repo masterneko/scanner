@@ -3,7 +3,7 @@ This is a very simple example which parses a file path.
 */
 
 #include <iostream>
-#include "lexer.h"
+#include "scanner.h"
 
 int main()
 {
@@ -11,21 +11,20 @@ int main()
     // path -> [ a, b, c... ]
 
     std::string s = "/a/path/which/leads/to/a/file";
-    lexer_t lex(s);
+    Scanner scan(s);
 
     std::cout << s << " ->\n";
 
-    while(lex)
+    while(scan)
     {
-        // split is much like strtok and takes in a delimiter
-        std::string component = lex.split("/");
+        auto component = scan.take_while(!match_chars("/"));
 
         if(!component.empty())
         {
             std::cout << component << "\n";
         }
 
-        lex.advance();
+        scan++;
     }
 
     // example two
@@ -33,12 +32,12 @@ int main()
 
     // reload the source string
     s = "file.tar.gz";
-    lex.set_source(s);
+    scan.set_source(s);
 
-    std::string filename = lex.split(".");
+    std::string filename { scan.take_while(!match_chars(".")) };
     std::string extension;
 
-    while(lex)
+    while(scan)
     {
         if(!extension.empty())
         {
@@ -46,9 +45,9 @@ int main()
             filename.append(extension);
         }
 
-        extension = lex.split(".");
+        extension = scan.take_while(!match_chars("."));
 
-        lex.advance();
+        scan++;
     }
 
     std::cout << "\n" << s << " ->\nfilename: " << filename << "\nextension: " << extension << std::endl;

@@ -1,2 +1,5 @@
-# Lexer
-This is an easy to use lexical analyser tool for C++. It's header only, it's only dependency is `std::string` and it's written in only a couple hundred lines of code.
+# Scanner
+`Scanner` is an easy to use text scanning tool for C++. It's header only and it's only dependencies are `std::string` and `std::string_view` + it's written in just about three hundred lines of code.
+
+# What is a scanner?
+Simply put, a scanner is tool for reading a string of characters. It you prevents reading outside the bounds of the string and provides methods for iterating over the string. A scanner is useful for writing lexers and for basic parsing applications.
