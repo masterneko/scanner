@@ -2,15 +2,17 @@
 
 #include <string>
 #include <string_view>
-class Scanner
+
+template <typename CharT>
+class BasicScanner
 {
 public:
-    using string_type = std::string;
-    using size_type = string_type::size_type; /* size_t */
-    using difference_type = string_type::difference_type; /* signed size_t */
-    using char_type = string_type::value_type; /* char */
-    using cstr_type = string_type::const_pointer; /* const char* */
-    using strview_type = std::basic_string_view<char_type>;
+    using char_type = CharT;
+    using string_type = typename std::basic_string<char_type>;
+    using size_type = typename string_type::size_type; /* size_t */
+    using difference_type = typename string_type::difference_type; /* signed size_t */
+    using cstr_type = typename string_type::const_pointer; /* const char* */
+    using strview_type = typename std::basic_string_view<char_type>;
 
 private:
     strview_type _source;
@@ -32,14 +34,9 @@ public:
             return matcher;
         }
 
-        size_t num_of_chars() const
+        size_type num_of_chars() const
         {
-            if(_match.empty()) return 1;
-
-            if(_is_char_class)
-            {
-                return 1;
-            }
+            if(_match.empty() || _is_char_class) return 1;
             
             return _match.length();
         }
@@ -48,10 +45,10 @@ public:
     class iterator
     {
     private:
-        const Scanner& _scan;
+        const BasicScanner<CharT>& _scan;
         size_type _i;
 
-        iterator(const Scanner& s, size_type i)
+        iterator(const BasicScanner<CharT>& s, size_type i)
         :
         _scan(s),
         _i(i)
@@ -96,7 +93,7 @@ public:
         {
             size_type column = 1;
 
-            for(size_t i = 0; i < _i; ++i)
+            for(size_type i = 0; i < _i; ++i)
             {
                 char_type c = get(i);
 
@@ -115,6 +112,11 @@ public:
             }
 
             return column;
+        }
+
+        size_type index() const
+        {
+            return _i;
         }
 
         iterator& operator++()
@@ -206,16 +208,16 @@ public:
             return !operator==(match);
         }
 
-        friend Scanner;
+        friend BasicScanner<CharT>;
     };
 
-    Scanner(strview_type s)
+    BasicScanner(strview_type s)
     :
     _source(s)
     {
     }
 
-    Scanner()
+    BasicScanner()
     {
     }
 
@@ -259,16 +261,12 @@ public:
 
     iterator operator++()
     {
-        _index++;
-
-        return iterator(*this, _index);
+        return iterator(*this, ++_index);
     }
 
     iterator operator++(int)
     {
-        iterator it = iterator(*this, _index);
-
-        _index++;
+        iterator it = iterator(*this, _index++);
 
         return it;
     }
@@ -329,6 +327,26 @@ public:
         return _source.substr(start_pos, _index - start_pos);
     }
 
+    // Matches only if the match text occurs in the scanner buffer
+    // An empty string will indicate a wildcard
+    static matcher_t match_lexeme(string_type match)
+    {
+        return matcher_t {
+            ._match = match,
+            ._is_char_class = false
+        };
+    }
+
+    // Matches one of any of the match characters
+    // An empty string will indicate a wildcard
+    static matcher_t match_chars(string_type match)
+    {
+        return matcher_t {
+            ._match = match,
+            ._is_char_class = true
+        };
+    }
+
     iterator begin()
     {
         return iterator(*this, 0);
@@ -345,21 +363,5 @@ public:
     }
 };
 
+using Scanner = BasicScanner<std::string::value_type>;
 
-// An empty string will indicate a wildcard
-static inline Scanner::matcher_t match_lexeme(Scanner::strview_type match)
-{
-    return Scanner::matcher_t {
-        ._match = match,
-        ._is_char_class = false
-    };
-}
-
-// An empty string will indicate a wildcard
-static inline Scanner::matcher_t match_chars(Scanner::string_type match)
-{
-    return Scanner::matcher_t {
-        ._match = match,
-        ._is_char_class = true
-    };
-}

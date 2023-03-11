@@ -10,14 +10,14 @@ int main()
     // example one
     // path -> [ a, b, c... ]
 
-    std::string s = "/a/path/which/leads/to/a/file";
+    Scanner::string_type s = "/a/path/which/leads/to/a/file";
     Scanner scan(s);
 
     std::cout << s << " ->\n";
 
     while(scan)
     {
-        auto component = scan.take_while(!match_chars("/"));
+        auto component = scan.take_while(!scan.match_chars("/"));
 
         if(!component.empty())
         {
@@ -34,8 +34,8 @@ int main()
     s = "file.tar.gz";
     scan.set_source(s);
 
-    std::string filename { scan.take_while(!match_chars(".")) };
-    std::string extension;
+    Scanner::string_type filename { scan.take_while(!scan.match_chars(".")) };
+    Scanner::string_type extension;
 
     while(scan)
     {
@@ -45,7 +45,7 @@ int main()
             filename.append(extension);
         }
 
-        extension = scan.take_while(!match_chars("."));
+        extension = scan.take_while(!scan.match_chars("."));
 
         scan++;
     }
