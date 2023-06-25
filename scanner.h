@@ -105,14 +105,34 @@ public:
             return old;
         }
 
+        bool operator<(const iterator& rhs) const
+        {
+            return &rhs._scan == &_scan && _i < rhs._i;
+        }
+
+        bool operator<=(const iterator& rhs) const
+        {
+            return &rhs._scan == &_scan && _i <= rhs._i;
+        }
+
+        bool operator>(const iterator& rhs) const
+        {
+            return &rhs._scan == &_scan && _i > rhs._i;
+        }
+
+        bool operator>=(const iterator& rhs) const
+        {
+            return &rhs._scan == &_scan && _i >= rhs._i;
+        }
+
         bool operator==(const iterator& rhs) const
         {
-            return &rhs._scan == &_scan && rhs._i == _i;
+            return &rhs._scan == &_scan && _i == rhs._i;
         }
 
         bool operator!=(const iterator& rhs) const
         {
-            return &rhs._scan != &_scan || rhs._i != _i;
+            return &rhs._scan != &_scan || _i != rhs._i;
         }
 
         const char_type operator*() const
