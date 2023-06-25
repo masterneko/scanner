@@ -162,6 +162,19 @@ public:
             return !operator==(match);
         }
 
+        // Retrieves a slice from current scanner index to the index of this iterator
+        strview_type slice() const
+        {
+            if(_i >= _scan._source.size()) return strview_type();
+
+            if(_i > _scan._index)
+            {
+                return _scan._source.substr(_scan._index, _i - _scan._index);
+            }
+            
+            return _scan._source.substr(_i, _scan._index - _i);
+        }
+
         friend BasicScanner<CharT>;
     };
 
