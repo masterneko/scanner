@@ -84,7 +84,8 @@ private:
 public:
     BrainFInterpreter()
     :
-    _buffer(512, 0) /* allocate 512 bytes and set to zero */
+    _buffer(512, 0), /* allocate 512 bytes and set to zero */
+    _index(0)
     {
     }
 

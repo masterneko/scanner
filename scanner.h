@@ -175,10 +175,19 @@ public:
     {
     }
 
-    void set_source(strview_type s)
+    BasicScanner<CharT>& operator=(strview_type s)
     {
         _source = s;
         _index = 0;
+
+        return *this;
+    }
+
+    BasicScanner<CharT>& operator=(iterator it)
+    {
+        _index = it.index();
+
+        return *this;
     }
 
     strview_type get_source() const
