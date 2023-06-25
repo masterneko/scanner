@@ -68,52 +68,6 @@ public:
             return get(_i);
         }
 
-        size_type line_number() const
-        {
-            size_type line = 1;
-
-            for(size_type i = 0; i < _i; ++i)
-            {
-                char_type c = get(i);
-
-                if(c == '\n')
-                {
-                    ++line;
-                }
-                else if(c == 0)
-                {
-                    break;
-                }
-            }
-
-            return line;
-        }
-
-        size_type column_number() const
-        {
-            size_type column = 1;
-
-            for(size_type i = 0; i < _i; ++i)
-            {
-                char_type c = get(i);
-
-                if(c == '\n')
-                {
-                    column = 1;
-                }
-                else if(c == 0)
-                {
-                    break;
-                }
-                else
-                {
-                    ++column;
-                }
-            }
-
-            return column;
-        }
-
         size_type index() const
         {
             return _i;
