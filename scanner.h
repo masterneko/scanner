@@ -68,6 +68,13 @@ public:
             return get(_i);
         }
 
+        iterator(const iterator& rhs)
+        :
+        _scan(rhs._scan),
+        _i(rhs._i)
+        {
+        }
+
         size_type index() const
         {
             return _i;
