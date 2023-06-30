@@ -45,21 +45,21 @@ public:
     class iterator
     {
     private:
-        const BasicScanner<CharT>& _scan;
+        const BasicScanner<CharT>* _scan;
         size_type _i;
 
         iterator(const BasicScanner<CharT>& s, size_type i)
         :
-        _scan(s),
+        _scan(&s),
         _i(i)
         {
         }
 
         char_type get(size_type index) const
         {
-            if(index >= _scan._source.size() || index < 0) return 0;
+            if(!_scan || index >= _scan->_source.size() || index < 0) return 0;
 
-            return _scan._source[index];
+            return _scan->_source[index];
         }
 
     public:
@@ -114,32 +114,32 @@ public:
 
         bool operator<(const iterator& rhs) const
         {
-            return &rhs._scan == &_scan && _i < rhs._i;
+            return rhs._scan == _scan && _i < rhs._i;
         }
 
         bool operator<=(const iterator& rhs) const
         {
-            return &rhs._scan == &_scan && _i <= rhs._i;
+            return rhs._scan == _scan && _i <= rhs._i;
         }
 
         bool operator>(const iterator& rhs) const
         {
-            return &rhs._scan == &_scan && _i > rhs._i;
+            return rhs._scan == _scan && _i > rhs._i;
         }
 
         bool operator>=(const iterator& rhs) const
         {
-            return &rhs._scan == &_scan && _i >= rhs._i;
+            return rhs._scan == _scan && _i >= rhs._i;
         }
 
         bool operator==(const iterator& rhs) const
         {
-            return &rhs._scan == &_scan && _i == rhs._i;
+            return rhs._scan == _scan && _i == rhs._i;
         }
 
         bool operator!=(const iterator& rhs) const
         {
-            return &rhs._scan != &_scan || _i != rhs._i;
+            return rhs._scan != _scan || _i != rhs._i;
         }
 
         const char_type operator*() const
@@ -192,14 +192,14 @@ public:
         // Retrieves a slice from current scanner index to the index of this iterator
         strview_type slice() const
         {
-            if(_i >= _scan._source.size()) return strview_type();
+            if(!_scan || _i >= _scan->_source.size()) return strview_type();
 
-            if(_i > _scan._index)
+            if(_i > _scan->_index)
             {
-                return _scan._source.substr(_scan._index, _i - _scan._index);
+                return _scan->_source.substr(_scan->_index, _i - _scan->_index);
             }
             
-            return _scan._source.substr(_i, _scan._index - _i);
+            return _scan->_source.substr(_i, _scan->_index - _i);
         }
 
         friend BasicScanner<CharT>;
