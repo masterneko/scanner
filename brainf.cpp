@@ -9,67 +9,63 @@ private:
     std::vector<uint8_t> _buffer;
     size_t _index;
 
-    void executor(Scanner scan, Scanner::char_type end_at = '\0')
+    void executor(Scanner& scan, Scanner::value_type end_at = Scanner::null_value)
     {
         while(scan)
         {
             if(scan.current() == end_at) break;
 
-            if(scan.skip(scan.match_chars(">")))
+            if(scan.skip_char('>'))
             {
                 increment_ptr();
             }
-            else if(scan.skip(scan.match_chars("<")))
+            else if(scan.skip_char('<'))
             {
                 decrement_ptr();
             }
-            else if(scan.skip(scan.match_chars("+")))
+            else if(scan.skip_char('+'))
             {
                 increment_data();
             }
-            else if(scan.skip(scan.match_chars("-")))
+            else if(scan.skip_char('-'))
             {
                 decrement_data();
             }
-            else if(scan.skip(scan.match_chars(".")))
+            else if(scan.skip_char('.'))
             {
                 print_data();
             }
-            else if(scan.skip(scan.match_chars(",")))
+            else if(scan.skip_char(','))
             {
                 receive_data();
             }
-            else if(scan.skip(scan.match_chars("[")))
+            else if(scan.skip_char('['))
             {
-                while(scan && _buffer[_index] != 0)
+                while (scan && _buffer[_index] != 0)
                 {
                     executor(scan, ']');
                 }
 
-                scan.skip_while(!scan.match_chars("]"));
-
-                if(!scan.skip(scan.match_chars("]")))
+                if (!scan.skip_char(']'))
                 {
                     std::cerr << "ErRoR: unterminated []" << std::endl;
                     std::exit(EXIT_FAILURE);
                 }
             }
-            else if(scan.skip(scan.match_chars("]")))
+            else if(scan.skip_char(']'))
             {
                 while(scan && _buffer[_index] == 0)
                 {
                     executor(scan, '[');
                 }
 
-                scan.skip_while(!scan.match_chars("["));
-
-                if(!scan.skip(scan.match_chars("[")))
+                if(!scan.skip_char('['))
                 {
                     std::cerr << "ErRoR: unterminated ][" << std::endl;
                     std::exit(EXIT_FAILURE);
                 }
             }
-            else if(scan.skip(scan.match_chars("#")))
+            else if(scan.skip_char('#'))
             {
                 std::clog << "[" << _index << "]: " << (int)_buffer[_index] << std::endl;
             }
@@ -130,9 +126,11 @@ public:
         std::cin >> _buffer[_index];
     }
 
-    BrainFInterpreter& execute(Scanner::strview_type source)
+    BrainFInterpreter& execute(Scanner::view_type source)
     {
-        executor(source);
+        Scanner scan(source);
+
+        executor(scan);
 
         return *this;
     }

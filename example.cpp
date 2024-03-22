@@ -16,11 +16,13 @@ int main()
 
     while(scan)
     {
-        auto component = scan.take_while(!scan.match_chars("/"));
+        auto it = scan.current();
 
-        if(!component.empty())
+        while (scan.skip_char_outside('/'));
+
+        if(it != scan.current())
         {
-            std::cout << component << "\n";
+            std::cout << it.slice() << "\n";
         }
 
         scan++;
@@ -32,7 +34,11 @@ int main()
     // reload the source string
     scan = "file.tar.gz";
 
-    Scanner::string_type filename { scan.take_while(!scan.match_chars(".")) };
+    auto it = scan.current();
+
+    while (scan.skip_char_outside("."));
+
+    Scanner::string_type filename { it.slice() };
     Scanner::string_type extension;
 
     while(scan)
@@ -43,7 +49,11 @@ int main()
             filename.append(extension);
         }
 
-        extension = scan.take_while(!scan.match_chars("."));
+        it = scan.current();
+
+        while (scan.skip_char_outside("."));
+
+        extension = it.slice();
 
         scan++;
     }

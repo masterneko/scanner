@@ -3,71 +3,44 @@
 #include <string>
 #include <string_view>
 
-template <typename CharT>
+template <typename ValueT>
 class BasicScanner
 {
 public:
-    using char_type = CharT;
-    using string_type = typename std::basic_string<char_type>;
+    using value_type = ValueT;
+    using string_type = typename std::basic_string<value_type>;
+    using view_type = typename std::basic_string_view<value_type>;
     using size_type = typename string_type::size_type; /* size_t */
-    using difference_type = typename string_type::difference_type; /* signed size_t */
     using cstr_type = typename string_type::const_pointer; /* const char* */
-    using strview_type = typename std::basic_string_view<char_type>;
+
+    static constexpr value_type null_value = value_type();
 
 private:
-    strview_type _source;
+    view_type _source;
     size_type _index = 0;
 
 public:
-    struct matcher_t
-    {
-        strview_type _match;
-        bool _is_char_class;
-        bool _true_value = true;
-
-        matcher_t operator!() const
-        {
-            matcher_t matcher = *this;
-
-            matcher._true_value = !matcher._true_value;
-
-            return matcher;
-        }
-
-        size_type num_of_chars() const
-        {
-            if(_match.empty() || _is_char_class) return 1;
-            
-            return _match.length();
-        }
-    };
-
     class iterator
     {
     private:
-        const BasicScanner<CharT>* _scan;
+        const BasicScanner<ValueT>* _scan;
         size_type _i;
 
-        iterator(const BasicScanner<CharT>& s, size_type i)
+        iterator(const BasicScanner<ValueT>& s, size_type i)
         :
         _scan(&s),
         _i(i)
         {
         }
 
-        char_type get(size_type index) const
+        value_type get(size_type index) const
         {
-            if(!_scan || index >= _scan->_source.size() || index < 0) return 0;
+            if (!_scan || index >= _scan->_source.size() || index < 0) return null_value;
 
             return _scan->_source[index];
         }
 
     public:
-        operator char_type() const
-        {
-            return get(_i);
-        }
-
         iterator(const iterator& rhs)
         :
         _scan(rhs._scan),
@@ -142,59 +115,55 @@ public:
             return rhs._scan != _scan || _i != rhs._i;
         }
 
-        const char_type operator*() const
+        const value_type operator*() const
         {
             return get(_i);
         }
 
-        bool operator==(const matcher_t& match) const
+        bool operator==(const view_type& sequence) const
         {
-            char_type current = get(_i);
-
-            if(current == 0)
+            for (size_type i = 0; i < sequence.size(); ++i)
             {
-                return !match._true_value;
-            }
-            else if(match._match.empty()) /* wildcard */
-            {
-                return true;
-            }
-
-            if(match._is_char_class)
-            {
-                for(char_type c : match._match)
+                if (get(_i + i) != sequence[i])
                 {
-                    if(current == c)
-                    {
-                        return match._true_value;
-                    }
-                }
-
-                return !match._true_value;
-            }
-            
-            for(size_type i = 0; i < match._match.size(); ++i)
-            {
-                if(get(_i + i) != match._match[i])
-                {
-                    return !match._true_value;
+                    return false;
                 }
             }
 
-            return match._true_value;
+            return true;
         }
 
-        bool operator!=(const matcher_t& match) const
+        bool operator[](view_type char_set)
+        {
+            value_type current = get(_i);
+
+            for (auto c : char_set)
+            {
+                if (current == c)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        bool operator!=(const view_type& match) const
         {
             return !operator==(match);
         }
 
-        // Retrieves a slice from current scanner index to the index of this iterator
-        strview_type slice() const
+        operator bool() const
         {
-            if(!_scan || _i >= _scan->_source.size()) return strview_type();
+            return get(_i) != null_value;
+        }
 
-            if(_i > _scan->_index)
+        // Retrieves a slice from current scanner index to the index of this iterator
+        view_type slice() const
+        {
+            if (!_scan || _i >= _scan->_source.size()) return view_type();
+
+            if (_i > _scan->_index)
             {
                 return _scan->_source.substr(_scan->_index, _i - _scan->_index);
             }
@@ -202,12 +171,18 @@ public:
             return _scan->_source.substr(_i, _scan->_index - _i);
         }
 
-        friend BasicScanner<CharT>;
+        friend BasicScanner<ValueT>;
     };
 
-    BasicScanner(strview_type s)
+    BasicScanner(view_type s)
     :
     _source(s)
+    {
+    }
+
+    BasicScanner(const value_type* s, size_type n)
+    :
+    _source(s, n)
     {
     }
 
@@ -215,47 +190,37 @@ public:
     {
     }
 
-    BasicScanner<CharT>& operator=(strview_type s)
-    {
-        _source = s;
-        _index = 0;
-
-        return *this;
-    }
-
-    BasicScanner<CharT>& operator=(iterator it)
+    BasicScanner<ValueT>& operator=(iterator it)
     {
         _index = it.index();
 
         return *this;
     }
 
-    strview_type get_source() const
+    BasicScanner<ValueT>& operator=(view_type s)
+    {
+        _index = 0;
+        _source = s;
+
+        return *this;
+    }
+
+    view_type get_source() const
     {
         return _source;
     }
 
-    iterator current()
+    iterator current() const
     {
         return iterator(*this, _index);
     }
 
-    const iterator current() const
-    {
-        return iterator(*this, _index);
-    }
-
-    iterator peek(difference_type how_many = 1)
+    iterator peek(size_type how_many = 1) const
     {
         return iterator(*this, _index + how_many);
     }
 
-    const iterator peek(difference_type how_many = 1) const
-    {
-        return iterator(*this, _index + how_many);
-    }
-
-    iterator operator+=(difference_type how_many)
+    iterator operator+=(size_type how_many)
     {
         _index += how_many;
 
@@ -274,46 +239,11 @@ public:
         return it;
     }
 
-    // Advances the scanner until the match is no longer true 
-    // If the match is inverted then, the number of characters matched is retured
-    // else the number occurences of the match found is returned
-    size_type skip_while(const matcher_t& match, size_type max = 0)
+    bool skip_char(view_type char_set)
     {
-        size_type n = 0;
-
-        while(current() && current() == match)
+        if (current()[char_set])
         {
-            if(max > 0 && n == max) break;
-
-            if(match._true_value == true)
-            {
-                _index += match.num_of_chars();
-            }
-            else
-            {
-                ++_index;
-            }
-
-            n++;
-        }
-
-        return n;
-    }
-
-    // Skips match only once in contrast to skip_while
-    // which continously matches
-    bool skip(const matcher_t& match)
-    {
-        if(current() == match)
-        {
-            if(match._true_value == true)
-            {
-                _index += match.num_of_chars();
-            }
-            else
-            {
-                ++_index;
-            }
+            _index++;
 
             return true;
         }
@@ -321,33 +251,82 @@ public:
         return false;
     }
 
-    strview_type take_while(const matcher_t& match)
+    bool skip_char(value_type c)
     {
-        size_t start_pos = _index;
-        
-        skip_while(match);
-        
-        return _source.substr(start_pos, _index - start_pos);
+        if (*current() == c)
+        {
+            _index++;
+
+            return true;
+        }
+
+        return false;
     }
 
-    // Matches only if the match text occurs in the scanner buffer
-    // An empty string will indicate a wildcard
-    static matcher_t match_lexeme(string_type match)
+    bool skip_char(value_type c1, value_type c2)
     {
-        return matcher_t {
-            ._match = match,
-            ._is_char_class = false
-        };
+        value_type a = c1 < c2 ? c1 : c2;
+        value_type b = c1 > c2 ? c1 : c2;
+
+        if (*current() >= a && *current() <= b)
+        {
+            _index++;
+
+            return true;
+        }
+
+        return false;
     }
 
-    // Matches one of any of the match characters
-    // An empty string will indicate a wildcard
-    static matcher_t match_chars(string_type match)
+    bool skip_char_outside(view_type char_set)
     {
-        return matcher_t {
-            ._match = match,
-            ._is_char_class = true
-        };
+        if (current() && !current()[char_set])
+        {
+            _index++;
+
+            return true;
+        }
+
+        return false;
+    }
+
+    bool skip_char_outside(value_type c)
+    {
+        if (current() && *current() != c)
+        {
+            _index++;
+
+            return true;
+        }
+
+        return false;
+    }
+
+    bool skip_char_outside(value_type c1, value_type c2)
+    {
+        value_type a = c1 < c2 ? c1 : c2;
+        value_type b = c1 > c2 ? c1 : c2;
+
+        if (current() && (*current() < a || *current() > b))
+        {
+            _index++;
+
+            return true;
+        }
+
+        return false;
+    }
+
+    bool skip_sequence(view_type sequence)
+    {
+        if (current() == sequence)
+        {
+            _index += sequence.length();
+
+            return true;
+        }
+
+        return false;
     }
 
     iterator begin()
@@ -362,7 +341,7 @@ public:
 
     operator bool() const
     {
-        return *current() != 0;
+        return *current() != null_value;
     }
 };
 
