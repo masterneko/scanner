@@ -2,6 +2,7 @@
 
 #include <string>
 #include <string_view>
+#include <vector>
 
 template <typename ValueT>
 class BasicScanner
@@ -18,6 +19,40 @@ public:
 private:
     view_type _source;
     size_type _index = 0;
+    mutable std::vector<size_type> _lines; /* maps line number to index */
+
+    void build_line_index() const
+    {
+        if (!_lines.empty()) return;
+
+        _lines.push_back(0);
+
+        for (size_type i = 0; i < _source.size(); i++)
+        {
+            if (_source[i] == '\n')
+            {
+                _lines.push_back(i + 1);
+            }
+        }
+    }
+
+    void index_to_line_column_number(size_type index, size_type& line, size_type& column) const
+    {
+        build_line_index();
+
+        size_t line_index = 0;
+
+        for (size_t i = 0; i < _lines.size(); i++)
+        {
+            if (index >= _lines[i])
+            {
+                line_index = i;
+            }
+        }
+
+        line = line_index + 1;
+        column = index - _lines[line_index] + 1;
+    }
 
 public:
     class iterator
@@ -161,7 +196,7 @@ public:
         // Retrieves a slice from current scanner index to the index of this iterator
         view_type slice() const
         {
-            if (!_scan || _i >= _scan->_source.size()) return view_type();
+            if (!_scan) return view_type();
 
             if (_i > _scan->_index)
             {
@@ -169,6 +204,21 @@ public:
             }
             
             return _scan->_source.substr(_i, _scan->_index - _i);
+        }
+
+        struct location
+        {
+            size_type index;
+            size_type line, column;
+        };
+
+        location get_location() const
+        {
+            size_type line, column;
+
+            _scan->index_to_line_column_number(_i, line, column);
+
+            return { _i, line, column };
         }
 
         friend BasicScanner<ValueT>;
@@ -201,13 +251,9 @@ public:
     {
         _index = 0;
         _source = s;
+        _lines.clear();
 
         return *this;
-    }
-
-    view_type get_source() const
-    {
-        return _source;
     }
 
     iterator current() const
@@ -337,6 +383,35 @@ public:
     iterator end()
     {
         return iterator(*this, _source.size());
+    }
+
+    iterator at(size_type index)
+    {
+        if (index >= _source.size())
+        {
+            throw std::out_of_range("BasicScanner.at(index): index is out of bounds");
+        }
+
+        return iterator(*this, index);
+    }
+
+    iterator at(size_type line, size_type column)
+    {
+        build_line_index();
+
+        if (line > _lines.size())
+        {
+            throw std::out_of_range("BasicScanner.at(line, column): line is out of bounds");
+        }
+
+        size_type index = _lines[line - 1] + column - 1;
+
+        if (index >= _source.size())
+        {
+            throw std::out_of_range("BasicScanner.at(line, column): column is out of bounds");
+        }
+
+        return iterator(*this, index);
     }
 
     operator bool() const

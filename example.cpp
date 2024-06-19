@@ -5,14 +5,10 @@ This is a very simple example which parses a file path.
 #include <iostream>
 #include "scanner.h"
 
-int main()
+// path -> [ a, b, c... ]
+void split_path(std::string_view path)
 {
-    // example one
-    // path -> [ a, b, c... ]
-
-    Scanner scan("/a/path/which/leads/to/a/file");
-
-    std::cout << scan.get_source() << " ->\n";
+    Scanner scan(path);
 
     while(scan)
     {
@@ -27,13 +23,12 @@ int main()
 
         scan++;
     }
+}
 
-    // example two
-    // filename -> filename + extension
-
-    // reload the source string
-    scan = "file.tar.gz";
-
+// filename -> filename + extension
+void show_extension(std::string_view full_filename)
+{
+    Scanner scan(full_filename);
     auto it = scan.current();
 
     while (scan.skip_char_outside("."));
@@ -58,7 +53,20 @@ int main()
         scan++;
     }
 
-    std::cout << "\n" << scan.get_source() << " ->\nfilename: " << filename << "\nextension: " << extension << std::endl;
+    std::cout << "\n" << full_filename << " ->\nfilename: " << filename << "\nextension: " << extension << std::endl;
+}
+
+int main()
+{
+    // example one
+    const char* path = "/a/path/which/leads/to/a/file";
+
+    std::cout << path << " ->\n";
+
+    split_path(path);
+
+    // example two
+    show_extension("file.tar.gz");
 
     return 0;
 }
